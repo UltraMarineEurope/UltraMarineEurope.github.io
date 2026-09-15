@@ -291,6 +291,8 @@
 
   flip.on('changeOrientation', function () {
     if (!pripraveno) return;
+    // hustotu stránek (měkká/tvrdá) upravujeme jen na výšku – po změně orientace ji vrátíme
+    flip.getPageCollection().getPages().forEach(function (s) { s.setDrawingDensity(s.getDensity()); });
     aktualizujOvladani();
     posunKnihu();
   });
@@ -306,6 +308,21 @@
   flip.loadFromHTML(strany);
   // knihovna si z minWidth nastaví i minimální šířku bloku – při startu na mobilu by byla obří
   kniha.style.minWidth = '';
+
+  // Na výšku (mobil) je vidět jen jedna stránka. Měkké listování zpět by předchozí stránku jen
+  // vysunulo zleva, proto ji při listování zpět otočíme jako tuhý list kolem hřbetu.
+  // Dopředu zůstává měkké zvlnění stránky.
+  var kolekce = flip.getPageCollection();
+  var puvodniOtacenaStrana = kolekce.getFlippingPage.bind(kolekce);
+  kolekce.getFlippingPage = function (smer) {
+    if (naVysku()) {
+      var zpet = smer === 1; // FlipDirection.BACK
+      var index = kolekce.getCurrentSpreadIndex() - (zpet ? 1 : 0);
+      if (index >= 0 && index < pocet) kolekce.getPage(index).setDrawingDensity(zpet ? 'hard' : 'soft');
+    }
+    return puvodniOtacenaStrana(smer);
+  };
+
   pripraveno = true;
   flip.update();
 
