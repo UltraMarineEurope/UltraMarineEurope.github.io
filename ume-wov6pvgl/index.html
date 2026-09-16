@@ -8,7 +8,10 @@
 <title>Ultra Marine – The Ultra Phenomenon Anchor</title>
 <meta property="og:title" content="Ultra Marine – The Ultra Phenomenon Anchor">
 <link rel="icon" href="data:,">
-<link rel="stylesheet" href="brozura.css?v=18fe897238">
+<!-- vzhled, data a skript brožury vždy čerstvé: hosting drží stránku v mezipaměti 10 minut
+     a po aktualizaci by se jinak míchala stará data s novými obrázky -->
+<script>document.write('<link rel="stylesheet" href="brozura.css?v=18fe897238&t=' + Date.now() + '">');</script>
+<noscript><link rel="stylesheet" href="brozura.css?v=18fe897238"></noscript>
 <style>:root { --pozadi: #3b3f45; }</style>
 </head>
 <body>
@@ -66,7 +69,9 @@
 <noscript><p class="hlaska">Pro zobrazení brožury povolte v prohlížeči JavaScript.</p></noscript>
 
 <script src="page-flip.browser.js?v=18fe897238"></script>
-<script src="data.js?v=18fe897238"></script>
-<script src="brozura.js?v=18fe897238"></script>
+<script>
+  var cas = Date.now();
+  document.write('<script src="data.js?t=' + cas + '"><\/script><script src="brozura.js?t=' + cas + '"><\/script>');
+</script>
 </body>
 </html>
