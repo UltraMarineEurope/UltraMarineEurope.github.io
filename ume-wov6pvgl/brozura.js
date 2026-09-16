@@ -67,6 +67,9 @@
     else prvek.setAttribute('data-src', src);
   }
 
+  var ROZESTUP_OBJEVENI = 0.35; // s mezi objevením jednotlivých prvků
+  var DELKA_OBJEVENI = 0.7;     // s, délka objevení jednoho prvku (musí sedět s brozura.css)
+
   var NAZVY_AKCI = {
     dalsi: 'Další strana',
     predchozi: 'Předchozí strana',
@@ -107,6 +110,18 @@
       zdroj(p, m.src, hned);
       el.appendChild(p);
     });
+
+    // prvky, které se po zobrazení stránky postupně objeví (zleva doprava podle nastavení)
+    (s.animace || []).forEach(function (src, k) {
+      var p = document.createElement('img');
+      p.className = 'strana__objeveni';
+      p.alt = '';
+      p.draggable = false;
+      p.style.animationDelay = (k * ROZESTUP_OBJEVENI) + 's';
+      zdroj(p, src, hned);
+      el.appendChild(p);
+    });
+    if (s.animace && hned) el.classList.add('strana--objeveno');
 
     // texty a grafika, které v PDF leží nad fotkou nahrazenou animací
     if (s.vrstva) {
@@ -156,7 +171,8 @@
   }
 
   function nactiStranu(el, vcetneAnimaci) {
-    var cekajici = el.querySelectorAll(vcetneAnimaci ? '[data-src]' : '.strana__obr[data-src], .strana__vrstva[data-src]');
+    var cekajici = el.querySelectorAll(vcetneAnimaci ? '[data-src]'
+      : '.strana__obr[data-src], .strana__vrstva[data-src], .strana__objeveni[data-src]');
     for (var j = 0; j < cekajici.length; j++) {
       var p = cekajici[j];
       p.src = p.getAttribute('data-src');
@@ -249,6 +265,26 @@
     tlVpred.disabled = sipkaVpred.disabled = v[v.length - 1] === pocet - 1;
   }
 
+  // Postupné objevení se přehraje pokaždé, když čtenář na stránku přijde; po dohrání zůstane výsledný stav.
+  function prehrajObjeveni() {
+    var v = viditelne();
+    strany.forEach(function (el, i) {
+      if (!data.stranky[i].animace) return;
+      var videt = v.indexOf(i) !== -1;
+      if (videt && !el.__objeveni) {
+        el.__objeveni = setTimeout(function () {
+          el.classList.remove('strana--objevuje');
+          el.classList.add('strana--objeveno');
+        }, ((data.stranky[i].animace.length - 1) * ROZESTUP_OBJEVENI + DELKA_OBJEVENI) * 1000 + 100);
+        el.classList.add('strana--objevuje');
+      } else if (!videt && el.__objeveni) {
+        clearTimeout(el.__objeveni);
+        el.__objeveni = null;
+        el.classList.remove('strana--objevuje', 'strana--objeveno');
+      }
+    });
+  }
+
   function zapisDoAdresy(index) {
     var nova = index > 0 ? '#' + (index + 1) : location.pathname + location.search;
     try { history.replaceState(null, '', nova); } catch (e) { /* file:// v některých prohlížečích */ }
@@ -276,6 +312,7 @@
     nactiOkoli(e.data);
     aktualizujOvladani();
     zapisDoAdresy(e.data);
+    prehrajObjeveni();
   });
 
   flip.on('changeState', function (e) {
@@ -330,6 +367,7 @@
   nactiOkoli(start);
   aktualizujOvladani();
   posunKnihu();
+  prehrajObjeveni();
   setTimeout(function () { obal.classList.remove('bez-prechodu'); }, 150);
 
   // načítací kolečko zmizí po načtení první viditelné stránky

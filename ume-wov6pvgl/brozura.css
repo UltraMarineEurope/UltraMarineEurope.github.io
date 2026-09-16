@@ -77,6 +77,24 @@ button { font: inherit; }
   pointer-events: none;
 }
 
+/* postupné objevení prvků (délka 0.7s musí sedět s DELKA_OBJEVENI v brozura.js) */
+.strana__objeveni {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  pointer-events: none;
+}
+.strana--objevuje .strana__objeveni { animation: objevit .7s ease-out both; }
+.strana--objeveno .strana__objeveni { opacity: 1; }
+@keyframes objevit {
+  from { opacity: 0; transform: translateY(1.5%); }
+  to { opacity: 1; transform: none; }
+}
+
 .strana__vrstva {
   position: absolute;
   inset: 0;
