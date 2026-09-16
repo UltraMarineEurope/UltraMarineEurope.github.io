@@ -382,6 +382,43 @@
     }
   })();
 
+  /* ---------- dotyková gesta ---------- */
+
+  // Knihovna odvozuje směr listování z místa prstu, ne ze směru tahu: pomalý tah doleva končící
+  // v levé části stránky nebo ťuknutí vlevo listovalo zpět. Na dotyku proto rozhoduje jen směr přejetí.
+  var dotyk = null;
+  var posledniDotyk = 0;
+
+  kniha.addEventListener('touchstart', function (e) {
+    posledniDotyk = Date.now();
+    if (e.target.closest && e.target.closest('a')) return; // odkazy obslouží prohlížeč
+    var t = e.changedTouches[0];
+    dotyk = { x: t.clientX, y: t.clientY };
+    e.stopPropagation(); // knihovna dotyk nedostane
+  }, true);
+
+  window.addEventListener('touchend', function (e) {
+    posledniDotyk = Date.now();
+    if (!dotyk) return;
+    var t = e.changedTouches[0];
+    var dx = t.clientX - dotyk.x;
+    var dy = t.clientY - dotyk.y;
+    var r = kniha.getBoundingClientRect();
+    var roh = dotyk.y - r.top < r.height / 2 ? 'top' : 'bottom';
+    dotyk = null;
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+      if (dx < 0) flip.flipNext(roh);
+      else flip.flipPrev(roh);
+    }
+  }, true);
+
+  window.addEventListener('touchcancel', function () { dotyk = null; }, true);
+
+  // po ťuknutí prohlížeč napodobí i kliknutí myší – to by knihovna opět vzala podle místa ťuknutí
+  kniha.addEventListener('mousedown', function (e) {
+    if (Date.now() - posledniDotyk < 1000) e.stopPropagation();
+  }, true);
+
   /* ---------- odkazy uvnitř brožury ---------- */
 
   function naKliknutiOdkazu(e) {
